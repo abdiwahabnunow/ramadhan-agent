@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { getContext } = require('./context');
 const { fetchPrayerTimes } = require('./prayers');
 const { getDailyObjective } = require('./objectives');

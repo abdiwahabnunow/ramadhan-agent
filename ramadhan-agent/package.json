@@ -1,15 +1,34 @@
 {
   "name": "ramadhan-agent",
   "version": "1.0.0",
+  "description": "CLI app for Ramadan prayer times, Suhur/Iftar highlights, and daily objectives by city",
   "main": "index.js",
+  "bin": {
+    "ramadhan-agent": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "ramadan",
+    "prayer-times",
+    "islam",
+    "suhur",
+    "iftar",
+    "cli",
+    "aladhan"
+  ],
+  "author": "abdiwahabnunow",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "node-fetch": "^3.3.2"
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abdiwahabnunow/ramadhan-agent.git"
+  },
+  "homepage": "https://github.com/abdiwahabnunow/ramadhan-agent#readme"
 }
