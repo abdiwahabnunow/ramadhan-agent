@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const { fetchPrayerTimes } = require('./prayers');
 const { getDailyObjective } = require('./objectives');
