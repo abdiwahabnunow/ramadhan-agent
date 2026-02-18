@@ -2,6 +2,7 @@ const http = require('http');
 const { URL } = require('url');
 const { fetchPrayerTimes } = require('./prayers');
 const { getDailyObjective } = require('./objectives');
+const { runAgent } = require('./agent');
 
 const PORT = 3000;
 
@@ -310,6 +311,122 @@ function renderPage({ city, country, data, error } = {}) {
       line-height: 1.6;
       color: #c8bfa0;
     }
+
+    /* ── Chat Agent ── */
+    .chat-section {
+      width: 100%;
+      max-width: 520px;
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .chat-section h3 {
+      color: #d4a017;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .chat-section h3 span {
+      color: #7ea87e;
+      font-size: 0.8rem;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 0.5rem;
+    }
+
+    #chat-history {
+      background: #161b22;
+      border: 1px solid #2a3040;
+      border-radius: 10px;
+      padding: 1rem;
+      min-height: 120px;
+      max-height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .chat-empty {
+      color: #4a5568;
+      font-size: 0.9rem;
+      text-align: center;
+      margin: auto;
+    }
+
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      max-width: 90%;
+    }
+
+    .chat-msg.user { align-self: flex-end; }
+    .chat-msg.assistant { align-self: flex-start; }
+
+    .chat-msg .bubble {
+      padding: 0.6rem 0.9rem;
+      border-radius: 10px;
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .chat-msg.user .bubble {
+      background: #1e2a3a;
+      border: 1px solid #2a4060;
+      color: #c8d8e8;
+    }
+
+    .chat-msg.assistant .bubble {
+      background: #1a2010;
+      border: 1px solid #3a4a20;
+      color: #d8e8c8;
+    }
+
+    .chat-msg.error .bubble {
+      background: #2a1515;
+      border: 1px solid #7a2020;
+      color: #e07070;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #2a3040;
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      color: #e6d9b8;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #chat-input:focus { border-color: #d4a017; }
+    #chat-input::placeholder { color: #4a5568; }
+
+    #chat-send {
+      background: #7ea87e;
+      color: #0d1117;
+      border: none;
+      border-radius: 8px;
+      padding: 0.65rem 1.1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    #chat-send:hover { background: #95c295; }
+    #chat-send:disabled { background: #3a5a3a; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -335,13 +452,105 @@ function renderPage({ city, country, data, error } = {}) {
   </div>
 
   ${resultsHtml}
+
+  <div class="chat-section">
+    <h3>Ask the Agent <span>powered by Claude</span></h3>
+    <div id="chat-history">
+      <p class="chat-empty">Ask me anything — e.g. "When is Iftar in Cairo today?" or "What's the Day 10 Ramadan objective?"</p>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Type your question..." autocomplete="off">
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const history = document.getElementById('chat-history');
+    const input = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send');
+    let firstMessage = true;
+
+    function addMessage(role, text) {
+      if (firstMessage) {
+        history.innerHTML = '';
+        firstMessage = false;
+      }
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + role;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      div.appendChild(bubble);
+      history.appendChild(div);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      sendBtn.disabled = true;
+      addMessage('user', msg);
+
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg }),
+        });
+        const data = await res.json();
+        if (data.error) {
+          addMessage('error', 'Error: ' + data.error);
+        } else {
+          addMessage('assistant', data.response);
+        }
+      } catch (err) {
+        addMessage('error', 'Network error: ' + err.message);
+      } finally {
+        sendBtn.disabled = false;
+        input.focus();
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
 </body>
 </html>`;
+}
+
+async function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk; });
+    req.on('end', () => resolve(body));
+    req.on('error', reject);
+  });
 }
 
 const server = http.createServer(async (req, res) => {
   const base = `http://${req.headers.host}`;
   const url = new URL(req.url, base);
+
+  // POST /chat — agent endpoint
+  if (req.method === 'POST' && url.pathname === '/chat') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    try {
+      const body = await readBody(req);
+      const { message } = JSON.parse(body);
+      if (!message || typeof message !== 'string') {
+        res.end(JSON.stringify({ error: 'message field required' }));
+        return;
+      }
+      const response = await runAgent(message);
+      res.end(JSON.stringify({ response }));
+    } catch (err) {
+      res.end(JSON.stringify({ error: err.message }));
+    }
+    return;
+  }
 
   if (url.pathname !== '/') {
     res.writeHead(404, { 'Content-Type': 'text/plain' });

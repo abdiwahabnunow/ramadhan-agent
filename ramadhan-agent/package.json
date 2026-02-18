@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node server.js",
+    "mcp": "node mcp-server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -22,7 +23,10 @@
   "author": "abdiwahabnunow",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "@anthropic-ai/sdk": "^0.76.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "node-fetch": "^3.3.2",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=18"
