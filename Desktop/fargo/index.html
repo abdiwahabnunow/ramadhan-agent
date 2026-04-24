@@ -1,20 +1,38 @@
-<htm>
-<header>
-<script src="script.js"></script>
-</header>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+
+    <!-- Use defer so DOM loads first -->
+    <script src="script.js" defer></script>
+</head>
+
 <body>
-    <h1>SHOPPING CART</h1>
-    <H2>BUDGET</H2>
-<form onsubmit="submitForm(event)">
-    <input id="item_name" type="text" name="item_name" placeholder="Enter item name">
-    <input id="item_price" type="number" name="item_price" placeholder="Enter item price">
-    <button type="submit">Add to Cart</button>
+    <h1>Shopping Cart</h1>
+    <h2>Budget</h2>
 
-</FORm>
-<ul id="shopping-list">
-    <li>you have no items in your cart</li>
-</ul>
-<p>Total: $<span id="remaining-budget">0.00</span></p>
+    <form onsubmit="submitForm(event)">
+        <input 
+            id="item_name" 
+            type="text" 
+            placeholder="Enter item name" 
+            required
+        >
 
+        <input 
+            id="item_price" 
+            type="number" 
+            placeholder="Enter item price" 
+            required
+        >
+
+        <button type="submit">Add to Cart</button>
+    </form>
+
+    <ul id="shopping-list"></ul>
+
+    <p id="remaining-budget"></p>
 </body>
-</htm>
+</html>
